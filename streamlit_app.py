@@ -1,4 +1,4 @@
-import streamlit as st
+iimport streamlit as st
 import yfinance as yf
 from datetime import datetime, timedelta
 import os
@@ -110,75 +110,64 @@ def check_usage_limit():
 
 def get_ai_advice(portfolio_context, user_question, stock_data=None):
     """Get calm, rational advice from Gemini AI using REST API"""
-
+    
     # Check usage limit
     if not check_usage_limit():
         return None
-
+    
     # Check rate limit
     can_proceed, wait_time = check_rate_limit()
     if not can_proceed:
         return f"⏳ Please wait {wait_time} seconds before asking another question."
-
-    # Check for API key (set this in your environment: GOOGLE_API_KEY=...)
+    
+    # Check for API key
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         return "⚠️ API key not configured. Please contact support."
-
+    
     try:
         # Build context
         context = f"{SYSTEM_PROMPT}\n\n"
         context += f"User's Portfolio Context: {portfolio_context}\n\n"
         context += f"User's Question: {user_question}\n\n"
-
+        
         if stock_data:
-            context += "Current Market Data:\n"
+            context += f"Current Market Data:\n"
             context += f"- {stock_data['company_name']} ({stock_data['ticker']})\n"
             context += f"- Current Price: ${stock_data['current_price']:.2f}\n"
             context += f"- Week Change: {stock_data['week_change_percent']:+.2f}%\n"
             context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
             context += f"- Sector: {stock_data['sector']}\n"
-
-        # Correct Gemini REST endpoint (v1beta, gemini-2.0-flash)
-        url = (
-            "https://generativelanguage.googleapis.com/"
-            "v1beta/models/gemini-2.0-flash:generateContent"
-            f"?key={api_key}"
-        )
-
-        headers = {"Content-Type": "application/json"}
+        
+        # Call Gemini via REST API - using gemini-1.5-flash (free tier)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        headers = {'Content-Type': 'application/json'}
         data = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": context}
-                    ]
-                }
-            ]
+            "contents": [{
+                "parts": [{
+                    "text": context
+                }]
+            }]
         }
-
+        
         response = requests.post(url, headers=headers, json=data, timeout=30)
         response.raise_for_status()
+        
         result = response.json()
-
+        
         # Extract text from response
-        if "candidates" in result and len(result["candidates"]) > 0:
-            # Defensive parsing in case structure changes
-            candidate = result["candidates"][0]
-            parts = candidate.get("content", {}).get("parts", [])
-            if parts and "text" in parts[0]:
-                text = parts[0]["text"]
-            else:
-                text = "⚠️ Got an unexpected response format from the AI."
-
+        if 'candidates' in result and len(result['candidates']) > 0:
+            text = result['candidates'][0]['content']['parts'][0]['text']
+            
             # Update tracking
             st.session_state.question_count += 1
             st.session_state.last_question_time = time.time()
-
+            
             return text
-
-        return "⚠️ Could not generate response. Please try again."
-
+        else:
+            return "⚠️ Could not generate response. Please try again."
+        
     except requests.exceptions.RequestException as e:
         return f"⚠️ Network error: {str(e)}"
     except Exception as e:
