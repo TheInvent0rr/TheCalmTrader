@@ -139,22 +139,8 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
             context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
             context += f"- Sector: {stock_data['sector']}\n"
         
-        # Call Gemini via REST API
-        url = f"curl ""https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-  -H 'Content-Type: application/json' \
-  -H 'X-goog-api-key: AIzaSyBTl2XsOicHQG1zpBkRM3500kwezL01v1Y' \
-  -X POST \
-  -d '{
-    "contents": [
-      {
-        "parts": [
-          {
-            "text": "Explain how AI works in a few words"
-          }
-        ]
-      }
-    ]
-  }':generateContent?key=AIzaSyBTl2XsOicHQG1zpBkRM3500kwezL01v1Y"
+        # Call Gemini via REST API - using gemini-1.5-flash (free tier)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
         headers = {'Content-Type': 'application/json'}
         data = {
