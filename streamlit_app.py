@@ -140,7 +140,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
             context += f"- Sector: {stock_data['sector']}\n"
         
         # Call Gemini via REST API
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/Default Gemini API Key:generateContent?key=AIzaSyBTl2XsOicHQG1zpBkRM3500kwezL01v1Y"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/DefaultGeminiAPIKey:generateContent?key=AIzaSyBTl2XsOicHQG1zpBkRM3500kwezL01v1Y"
         
         headers = {'Content-Type': 'application/json'}
         data = {
