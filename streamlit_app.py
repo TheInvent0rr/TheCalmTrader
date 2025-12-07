@@ -143,7 +143,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
         url = (
             "https://generativelanguage.googleapis.com/"
             "v1beta/models/gemini-2.0-flash:generateContent"
-            f"?key={AIzaSyBTl2XsOicHQG1zpBkRM3500kwezL01v1Y}"
+            f"?key={api_key}"
         )
 
         headers = {"Content-Type": "application/json"}
