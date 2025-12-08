@@ -215,7 +215,7 @@ with st.sidebar:
     
     # Feedback section
     st.markdown("### 💬 Feedback")
-    st.markdown("[Share your thoughts](https://forms.gle/5xctUcdE3qbBjmQv7) • Report bugs: thecalmtrader@gmail.com")
+    st.markdown("[Share your thoughts](https://forms.gle/5xctUcdE3qbBjmQv7) • Report bugs: thecalmtrader34@gmail.com")
 
 # Main area - Two tabs
 tab1, tab2 = st.tabs(["💬 Ask a Question", "📈 Check a Stock"])
