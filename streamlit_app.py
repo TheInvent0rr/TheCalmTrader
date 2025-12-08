@@ -168,7 +168,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
 # ============================================
 
 # Beta Banner
-st.info("🚀 **FREE BETA:** Testing phase. Limited to 3 questions per session. Your feedback helps improve this tool!")
+st.info("🚀 **FREE BETA:** Testing phase. Limited to 1 questions per session. Your feedback helps improve this tool!")
 
 # Header
 st.title("🧘 CalmTrader")
@@ -181,7 +181,7 @@ st.caption(f"📊 API calls used: {st.session_state.get('question_count', 0)}/da
 if questions_remaining > 0:
     st.caption(f"💬 Questions remaining this session: {questions_remaining}")
 else:
-    st.warning("🚫 You've used all 3 free questions this session. Refresh the page to reset, or check back later!")
+    st.warning("🚫 You've used all 1 free questions this session. Refresh the page to reset, or check back later!")
 
 st.divider()
 
