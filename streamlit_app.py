@@ -156,10 +156,10 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
         return "⚠️ Could not generate response. Please try again."
         
     except requests.exceptions.RequestException as e:
-       if "429" in str(e):
-    return "⚠️ Rate limited (429). Please wait 2-3 minutes before trying again."
-
+        if "429" in str(e):
+            return "⚠️ Rate limited (429). Please wait 2-3 minutes before trying again."
         return f"⚠️ Network error: {str(e)}"
+
     except Exception as e:
         return f"⚠️ Error getting advice: {str(e)}"
 
