@@ -109,7 +109,7 @@ def check_usage_limit():
     return True
 
 def get_ai_advice(portfolio_context, user_question, stock_data=None):
-    """Get calm, rational advice from Gemini AI using REST API"""
+    """Get calm, rational advice from OpenRouter AI using REST API"""
     
     if not check_usage_limit():
         return None
@@ -118,9 +118,9 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
     if not can_proceed:
         return f"⏳ Please wait {wait_time} seconds before asking another question."
     
-    api_key = os.environ.get("GOOGLE_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        return "⚠️ API key not configured. Set GOOGLE_API_KEY environment variable."
+        return "⚠️ API key not configured. Set OPENROUTER_API_KEY environment variable."
     
     try:
         context = f"{SYSTEM_PROMPT}\n\n"
