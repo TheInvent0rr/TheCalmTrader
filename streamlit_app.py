@@ -250,7 +250,7 @@ with tab1:
                     
                     # Show feedback prompt
                     if st.session_state.question_count >= FREE_QUESTIONS_PER_SESSION:
-                        st.info("💭 Was this helpful? [Share feedback](https://forms.gle/yourformlink) to help improve CalmTrader!")
+                        st.info("💭 Was this helpful? [Share feedback](https://forms.gle/xvDzHSetVmjsqjL89) to help improve CalmTrader!")
                 else:
                     st.warning(advice)
 
