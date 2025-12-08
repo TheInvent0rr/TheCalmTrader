@@ -135,9 +135,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
             context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
             context += f"- Sector: {stock_data['sector']}\n"
         
-        # FIXED: Uses api_key variable, proper model, correct indentation
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-        
         headers = {'Content-Type': 'application/json'}
         data = {
             "contents": [{
@@ -155,15 +153,16 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
             st.session_state.question_count += 1
             st.session_state.last_question_time = time.time()
             return text
-        else:
-            return "⚠️ Could not generate response. Please try again."
+        return "⚠️ Could not generate response. Please try again."
         
-   except requests.exceptions.RequestException as e:
-    if "429" in str(e):
-        st.warning("⚠️ Rate limited. Waiting 60s...")
-        time.sleep(60)
-        return get_ai_advice(portfolio_context, user_question, stock_data)  # retry
-    return f"⚠️ Network error: {str(e)}"
+    except requests.exceptions.RequestException as e:
+        if "429" in str(e):
+            st.warning("⚠️ Rate limited. Waiting 60s...")
+            time.sleep(60)
+            return get_ai_advice(portfolio_context, user_question, stock_data)
+        return f"⚠️ Network error: {str(e)}"
+    except Exception as e:
+        return f"⚠️ Error getting advice: {str(e)}"
 
 # ============================================
 # STREAMLIT UI
