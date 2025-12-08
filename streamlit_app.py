@@ -4,11 +4,10 @@ from datetime import datetime, timedelta
 import os
 import time
 import requests
-import json
 
 # ============================================
-# CALMTRADER - AI INVESTMENT COACH v2.0
-# Using Google Gemini (Free API)
+# CALMTRADER - AI INVESTMENT COACH
+# Using OpenRouter API (supports multiple models)
 # ============================================
 
 # Page configuration
@@ -30,8 +29,8 @@ if 'last_question_time' not in st.session_state:
     st.session_state.last_question_time = 0
 
 # Free tier limits
-FREE_QUESTIONS_PER_SESSION = 1
-COOLDOWN_SECONDS = 45
+FREE_QUESTIONS_PER_SESSION = 3
+COOLDOWN_SECONDS = 10
 
 # ============================================
 # SYSTEM PROMPT - Your Investment Philosophy
@@ -102,71 +101,85 @@ def check_rate_limit():
         return False, int(COOLDOWN_SECONDS - time_since_last)
     return True, 0
 
+def check_usage_limit():
+    """Check if user has exceeded free tier limit"""
+    if st.session_state.question_count >= FREE_QUESTIONS_PER_SESSION:
+        return False
+    return True
+
 def get_ai_advice(portfolio_context, user_question, stock_data=None):
-    """Get calm, rational advice from OpenRouter API"""
+    """Get calm, rational advice from AI via OpenRouter"""
+    
+    # Check usage limit
     if not check_usage_limit():
         return None
     
+    # Check rate limit
     can_proceed, wait_time = check_rate_limit()
     if not can_proceed:
         return f"⏳ Please wait {wait_time} seconds before asking another question."
     
+    # Check for API key
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        return "⚠️ OpenRouter API key not configured. Check Streamlit Secrets."
+        return "⚠️ API key not configured. Please contact support."
     
     try:
-        context = f"{SYSTEM_PROMPT}\n\n"
-        context += f"User's Portfolio Context: {portfolio_context}\n\n"
-        context += f"User's Question: {user_question}\n\n"
+        # Build context
+        user_context = f"User's Portfolio Context: {portfolio_context}\n\n"
+        user_context += f"User's Question: {user_question}\n\n"
         
         if stock_data:
-            context += f"Current Market Data:\n"
-            context += f"- {stock_data['company_name']} ({stock_data['ticker']})\n"
-            context += f"- Current Price: ${stock_data['current_price']:.2f}\n"
-            context += f"- Week Change: {stock_data['week_change_percent']:+.2f}%\n"
-            context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
-            context += f"- Sector: {stock_data['sector']}\n"
+            user_context += f"Current Market Data:\n"
+            user_context += f"- {stock_data['company_name']} ({stock_data['ticker']})\n"
+            user_context += f"- Current Price: ${stock_data['current_price']:.2f}\n"
+            user_context += f"- Week Change: {stock_data['week_change_percent']:+.2f}%\n"
+            user_context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
+            user_context += f"- Sector: {stock_data['sector']}\n"
         
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://thecalmtrader.streamlit.app',
-            'X-Title': 'CalmTrader'
-        }
-        data = {
-            "model": "google/gemini-2.0-flash-exp",
-            "messages": [{"role": "user", "content": context}],
-            "temperature": 0.3
-        }
+        # Call OpenRouter API
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "meta-llama/llama-3.2-3b-instruct:free",  # Free model
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_context}
+                ]
+            },
+            timeout=30
+        )
         
-        response = requests.post(url, headers=headers, json=data, timeout=30)
         response.raise_for_status()
-        
         result = response.json()
         
+        # Extract response
         if 'choices' in result and len(result['choices']) > 0:
-            text = result['choices'][0]['message']['content']
+            advice = result['choices'][0]['message']['content']
+            
+            # Update tracking
             st.session_state.question_count += 1
             st.session_state.last_question_time = time.time()
-            return text
-        return "⚠️ Could not generate response. Please try again."
+            
+            return advice
+        else:
+            return "⚠️ Could not generate response. Please try again."
         
     except requests.exceptions.RequestException as e:
-        if "429" in str(e):
-            return "⚠️ Rate limited (429). Please wait 2-3 minutes."
         return f"⚠️ Network error: {str(e)}"
     except Exception as e:
         return f"⚠️ Error getting advice: {str(e)}"
-
 
 # ============================================
 # STREAMLIT UI
 # ============================================
 
 # Beta Banner
-st.info("🚀 **FREE BETA:** Testing phase. Limited to 1 questions per session. Your feedback helps improve this tool!")
+st.info("🚀 **FREE BETA:** Testing phase. Limited to 3 questions per session. Your feedback helps improve this tool!")
 
 # Header
 st.title("🧘 CalmTrader")
@@ -175,11 +188,10 @@ st.markdown("Stop panic selling. Get calm, rational analysis of your investments
 
 # Usage counter
 questions_remaining = FREE_QUESTIONS_PER_SESSION - st.session_state.question_count
-st.caption(f"📊 API calls used: {st.session_state.get('question_count', 0)}/daily quota")
 if questions_remaining > 0:
     st.caption(f"💬 Questions remaining this session: {questions_remaining}")
 else:
-    st.warning("🚫 You've used all 1 free questions this session. Refresh the page to reset, or check back later!")
+    st.warning("🚫 You've used all 3 free questions this session. Refresh the page to reset, or check back later!")
 
 st.divider()
 
@@ -213,7 +225,7 @@ with st.sidebar:
     
     # Feedback section
     st.markdown("### 💬 Feedback")
-    st.markdown("[Share your thoughts](https://forms.gle/5xctUcdE3qbBjmQv7) • Report bugs: thecalmtrader34@gmail.com")
+    st.markdown("[Share your thoughts](https://forms.gle/yourformlink) • Report bugs: thecalmtrader@gmail.com")
 
 # Main area - Two tabs
 tab1, tab2 = st.tabs(["💬 Ask a Question", "📈 Check a Stock"])
@@ -228,11 +240,7 @@ with tab1:
         height=100
     )
     
-    if st.button("Get Calm Advice", type="primary"):
-    if not check_usage_limit():
-        st.warning("You've used your free question. Refresh to reset.")
-        st.stop()
-
+    if st.button("Get Calm Advice", type="primary", disabled=not check_usage_limit()):
         if not portfolio_input:
             st.warning("⚠️ Please tell me about your portfolio in the sidebar first!")
         elif not user_question:
@@ -252,7 +260,7 @@ with tab1:
                     
                     # Show feedback prompt
                     if st.session_state.question_count >= FREE_QUESTIONS_PER_SESSION:
-                        st.info("💭 Was this helpful? [Share feedback](https://forms.gle/xvDzHSetVmjsqjL89) to help improve CalmTrader!")
+                        st.info("💭 Was this helpful? [Share feedback](https://forms.gle/yourformlink) to help improve CalmTrader!")
                 else:
                     st.warning(advice)
 
@@ -268,12 +276,7 @@ with tab2:
     with col2:
         st.write("")  # Spacing
         st.write("")  # Spacing
-       check_button = st.button("Check Stock", type="primary")
-    if check_button:
-        if not check_usage_limit():
-            st.warning("You've used your free question. Refresh to reset.")
-            st.stop()
-
+        check_button = st.button("Check Stock", type="primary", disabled=not check_usage_limit())
     
     if check_button and ticker:
         with st.spinner(f"Analyzing {ticker}..."):
@@ -328,6 +331,6 @@ st.markdown("""
 <div style='text-align: center; color: gray;'>
     <p>Built by a 15-year-old investor who learned that staying calm beats reacting to headlines.</p>
     <p><small>Not financial advice. Always do your own research.</small></p>
-    <p><small>Questions? Feedback? Contact: thecalmtrader34@gmail.com</small></p>
+    <p><small>Questions? Feedback? Contact: thecalmtrader@gmail.com</small></p>
 </div>
 """, unsafe_allow_html=True)
