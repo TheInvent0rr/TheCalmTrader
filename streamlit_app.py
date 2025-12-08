@@ -145,7 +145,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "meta-llama/llama-3.2-3b-instruct:free",  # Free model
+                "model": "google/gemini-2.0-flash-exp:free",  # Different free model
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_context}
