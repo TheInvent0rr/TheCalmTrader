@@ -135,19 +135,19 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
             context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
             context += f"- Sector: {stock_data['sector']}\n"
         
-          # Replace your Gemini URL with:
-url = f"https://openrouter.ai/api/v1/chat/completions"
-headers = {
-    'Authorization': f'Bearer {api_key}',  # sk-or-...
-    'Content-Type': 'application/json',
-    'HTTP-Referer': 'https://yourapp.com',  # Required
-    'X-Title': 'CalmTrader'
-}
-data = {
-    "model": "google/gemini-2.0-flash-exp",  # or "openai/gpt-4o-mini"
-    "messages": [{"role": "user", "content": context}]
-}
-# Response parsing: result['choices'][0]['message']['content']
+                 # Replace your Gemini URL with:
+        url = f"https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            'Authorization': f'Bearer {api_key}',  # sk-or-...
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://yourapp.com',  # Required
+            'X-Title': 'CalmTrader'
+        }
+        data = {
+            "model": "google/gemini-2.0-flash-exp",  # or "openai/gpt-4o-mini"
+            "messages": [{"role": "user", "content": context}]
+        }
+        # Response parsing: result['choices'][0]['message']['content']
 
 
         
