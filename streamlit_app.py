@@ -30,8 +30,8 @@ if 'last_question_time' not in st.session_state:
     st.session_state.last_question_time = 0
 
 # Free tier limits
-FREE_QUESTIONS_PER_SESSION = 3
-COOLDOWN_SECONDS = 10
+FREE_QUESTIONS_PER_SESSION = 1
+COOLDOWN_SECONDS = 45
 
 # ============================================
 # SYSTEM PROMPT - Your Investment Philosophy
@@ -158,12 +158,12 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
         else:
             return "⚠️ Could not generate response. Please try again."
         
-    except requests.exceptions.RequestException as e:
-        if "429" in str(e):
-            return "⚠️ Rate limited (429). Wait 1-2 minutes and try again."
-        return f"⚠️ Network error: {str(e)}"
-    except Exception as e:
-        return f"⚠️ Error getting advice: {str(e)}"
+   except requests.exceptions.RequestException as e:
+    if "429" in str(e):
+        st.warning("⚠️ Rate limited. Waiting 60s...")
+        time.sleep(60)
+        return get_ai_advice(portfolio_context, user_question, stock_data)  # retry
+    return f"⚠️ Network error: {str(e)}"
 
 # ============================================
 # STREAMLIT UI
@@ -322,6 +322,6 @@ st.markdown("""
 <div style='text-align: center; color: gray;'>
     <p>Built by a 15-year-old investor who learned that staying calm beats reacting to headlines.</p>
     <p><small>Not financial advice. Always do your own research.</small></p>
-    <p><small>Questions? Feedback? Contact: thecalmtrader@gmail.com</small></p>
+    <p><small>Questions? Feedback? Contact: thecalmtrader34@gmail.com</small></p>
 </div>
 """, unsafe_allow_html=True)
