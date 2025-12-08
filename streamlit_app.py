@@ -112,64 +112,62 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
     """Get calm, rational advice from OpenRouter AI using REST API"""
     
     if not check_usage_limit():
-        return None
-    
-    can_proceed, wait_time = check_rate_limit()
-    if not can_proceed:
-        return f"⏳ Please wait {wait_time} seconds before asking another question."
-    
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        return "⚠️ API key not configured. Set OPENROUTER_API_KEY environment variable."
-    
-    try:
-        context = f"{SYSTEM_PROMPT}\n\n"
-        context += f"User's Portfolio Context: {portfolio_context}\n\n"
-        context += f"User's Question: {user_question}\n\n"
-        
-        if stock_data:
-            context += f"Current Market Data:\n"
-            context += f"- {stock_data['company_name']} ({stock_data['ticker']})\n"
-            context += f"- Current Price: ${stock_data['current_price']:.2f}\n"
-            context += f"- Week Change: {stock_data['week_change_percent']:+.2f}%\n"
-            context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
-            context += f"- Sector: {stock_data['sector']}\n"
-        
-                 # Replace your Gemini URL with:
-        url = f"https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            'Authorization': f'Bearer {api_key}',  # sk-or-...
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://thecalmtrader.streamlit.app',  # Required
-            'X-Title': 'CalmTrader'
-        }
-        data = {
-            "model": "google/gemini-2.0-flash-exp",  # or "openai/gpt-4o-mini"
-            "messages": [{"role": "user", "content": context}]
-        }
-        # Response parsing: result['choices'][0]['message']['content']
+    return None
 
+can_proceed, wait_time = check_rate_limit()
+if not can_proceed:
+    return f"⏳ Please wait {wait_time} seconds before asking another question."
 
-        
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        response.raise_for_status()
-        
-        result = response.json()
-        
-        if 'candidates' in result and len(result['candidates']) > 0:
-            text = result['candidates'][0]['content']['parts'][0]['text']
-            st.session_state.question_count += 1
-            st.session_state.last_question_time = time.time()
-            return text
-        return "⚠️ Could not generate response. Please try again."
-        
-    except requests.exceptions.RequestException as e:
-        if "429" in str(e):
-            return "⚠️ Rate limited (429). Please wait 2-3 minutes before trying again."
-        return f"⚠️ Network error: {str(e)}"
+api_key = os.environ.get("OPENROUTER_API_KEY")
+if not api_key:
+    return "⚠️ OpenRouter API key not configured. Check Streamlit Secrets."
 
-    except Exception as e:
-        return f"⚠️ Error getting advice: {str(e)}"
+try:
+    context = f"{SYSTEM_PROMPT}\n\n"
+    context += f"User's Portfolio Context: {portfolio_context}\n\n"
+    context += f"User's Question: {user_question}\n\n"
+    
+    if stock_data:
+        context += f"Current Market Data:\n"
+        context += f"- {stock_data['company_name']} ({stock_data['ticker']})\n"
+        context += f"- Current Price: ${stock_data['current_price']:.2f}\n"
+        context += f"- Week Change: {stock_data['week_change_percent']:+.2f}%\n"
+        context += f"- Week Range: ${stock_data['week_low']:.2f} - ${stock_data['week_high']:.2f}\n"
+        context += f"- Sector: {stock_data['sector']}\n"
+    
+    # OPENROUTER - EXACT HEADERS FOR STREAMLIT.CLOUD
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://thecalmtrader.streamlit.app',  # YOUR URL
+        'X-Title': 'CalmTrader'
+    }
+    data = {
+        "model": "google/gemini-2.0-flash-exp",
+        "messages": [{"role": "user", "content": context}],
+        "temperature": 0.3
+    }
+    
+    response = requests.post(url, headers=headers, json=data, timeout=30)
+    response.raise_for_status()
+    
+    result = response.json()
+    
+    if 'choices' in result and len(result['choices']) > 0:
+        text = result['choices'][0]['message']['content']
+        st.session_state.question_count += 1
+        st.session_state.last_question_time = time.time()
+        return text
+    return "⚠️ Could not generate response. Please try again."
+    
+except requests.exceptions.RequestException as e:
+    if "429" in str(e):
+        return "⚠️ Rate limited (429). Please wait 2-3 minutes."
+    return f"⚠️ Network error: {str(e)}"
+except Exception as e:
+    return f"⚠️ Error getting advice: {str(e)}"
+
 
 # ============================================
 # STREAMLIT UI
