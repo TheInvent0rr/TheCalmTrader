@@ -140,7 +140,7 @@ def get_ai_advice(portfolio_context, user_question, stock_data=None):
         headers = {
             'Authorization': f'Bearer {api_key}',  # sk-or-...
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://thecalmtrader.streamlit.app',  # Required
+            'HTTP-Referer': 'https://thecalmtrader.streamlit.app/',  # Required
             'X-Title': 'CalmTrader'
         }
         data = {
