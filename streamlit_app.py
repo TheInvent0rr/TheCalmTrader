@@ -228,7 +228,11 @@ with tab1:
         height=100
     )
     
-    if st.button("Get Calm Advice", type="primary", disabled=not check_usage_limit()):
+    if st.button("Get Calm Advice", type="primary"):
+    if not check_usage_limit():
+        st.warning("You've used your free question. Refresh to reset.")
+        st.stop()
+
         if not portfolio_input:
             st.warning("⚠️ Please tell me about your portfolio in the sidebar first!")
         elif not user_question:
@@ -264,7 +268,12 @@ with tab2:
     with col2:
         st.write("")  # Spacing
         st.write("")  # Spacing
-        check_button = st.button("Check Stock", type="primary", disabled=not check_usage_limit())
+       check_button = st.button("Check Stock", type="primary")
+    if check_button:
+        if not check_usage_limit():
+            st.warning("You've used your free question. Refresh to reset.")
+            st.stop()
+
     
     if check_button and ticker:
         with st.spinner(f"Analyzing {ticker}..."):
