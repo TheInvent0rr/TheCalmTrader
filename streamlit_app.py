@@ -179,6 +179,7 @@ st.markdown("Stop panic selling. Get calm, rational analysis of your investments
 
 # Usage counter
 questions_remaining = FREE_QUESTIONS_PER_SESSION - st.session_state.question_count
+st.caption(f"📊 API calls used: {st.session_state.get('question_count', 0)}/daily quota")
 if questions_remaining > 0:
     st.caption(f"💬 Questions remaining this session: {questions_remaining}")
 else:
